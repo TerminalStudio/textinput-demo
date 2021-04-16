@@ -47,12 +47,13 @@ class AppState extends State<App> {
               SizedBox(height: 15),
               ElevatedButton(
                 child: Text('attach'),
-                onPressed: _inputConnection != null ? null : () => _attach(),
+                onPressed:
+                    _inputConnection?.attached == true ? null : () => _attach(),
               ),
               SizedBox(height: 15),
               ElevatedButton(
                 child: Text('show'),
-                onPressed: _inputConnection == null ? null : () => _show(),
+                onPressed: _inputConnection?.attached != true ? null : () => _show(),
               ),
               SizedBox(height: 15),
               ElevatedButton(
@@ -63,6 +64,9 @@ class AppState extends State<App> {
               NumberField(
                 name: 'editableWidth',
                 initValue: editableWidth,
+                onChanged: (_) {
+                  setState(() {});
+                },
                 onValue: (value) {
                   editableWidth = value;
                   _updateEditableSizeAndTransform();
@@ -71,6 +75,9 @@ class AppState extends State<App> {
               NumberField(
                 name: 'editableHeight',
                 initValue: editableHeight,
+                onChanged: (_) {
+                  setState(() {});
+                },
                 onValue: (value) {
                   editableHeight = value;
                   _updateEditableSizeAndTransform();
@@ -79,6 +86,9 @@ class AppState extends State<App> {
               NumberField(
                 name: 'editableOffsetX',
                 initValue: editableOffsetX,
+                onChanged: (_) {
+                  setState(() {});
+                },
                 onValue: (value) {
                   editableOffsetX = value;
                   _updateEditableSizeAndTransform();
@@ -87,6 +97,9 @@ class AppState extends State<App> {
               NumberField(
                 name: 'editableOffsetY',
                 initValue: editableOffsetY,
+                onChanged: (_) {
+                  setState(() {});
+                },
                 onValue: (value) {
                   editableOffsetY = value;
                   _updateEditableSizeAndTransform();
@@ -229,11 +242,13 @@ class NumberField extends StatelessWidget {
   NumberField({
     required this.name,
     required this.onValue,
+    required this.onChanged,
     required this.initValue,
   });
 
   final String name;
   final double initValue;
+  final void Function(String) onChanged;
   final void Function(double) onValue;
 
   @override
@@ -247,6 +262,7 @@ class NumberField extends StatelessWidget {
         keyboardType: TextInputType.number,
         decoration: InputDecoration(labelText: name),
         onChanged: (content) {
+          onChanged(content);
           final value = double.tryParse(content);
           if (value != null) {
             onValue(value);
