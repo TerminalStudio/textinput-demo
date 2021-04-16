@@ -53,7 +53,8 @@ class AppState extends State<App> {
               SizedBox(height: 15),
               ElevatedButton(
                 child: Text('show'),
-                onPressed: _inputConnection?.attached != true ? null : () => _show(),
+                onPressed:
+                    _inputConnection?.attached != true ? null : () => _show(),
               ),
               SizedBox(height: 15),
               ElevatedButton(
@@ -105,12 +106,21 @@ class AppState extends State<App> {
                   _updateEditableSizeAndTransform();
                 },
               ),
+              SizedBox(height: 15),
+              Text('lastKeyEvent ${lastKeyEvent?.serialize()}'),
+              SizedBox(height: 15),
+              FocusDetect(onKeyPress: (event) {
+                lastKeyEvent = event;
+              }),
+              Text('Click the rect above to toggle focus.'),
             ],
           ),
         ),
       ),
     );
   }
+
+  RawKeyEvent? lastKeyEvent;
 
   late final TestTextInputClient _inputClient = TestTextInputClient(this);
 
@@ -146,6 +156,7 @@ class AppState extends State<App> {
 
   void _show() {
     setState(() {
+      _inputConnection?.setEditingState(TextEditingValue.empty);
       _inputConnection?.show();
     });
   }
@@ -179,9 +190,11 @@ class TestTextInputClient extends TextInputClient {
 
   final AppState state;
 
+  TextEditingValue? _currentTextEditingValue;
+
   TextEditingValue? get currentTextEditingValue {
     print('currentTextEditingValue');
-    return null;
+    return _currentTextEditingValue;
   }
 
   AutofillScope? get currentAutofillScope {
@@ -191,6 +204,7 @@ class TestTextInputClient extends TextInputClient {
 
   void updateEditingValue(TextEditingValue value) {
     state.onTextEditingValue(value);
+    _currentTextEditingValue = value;
     print('updateEditingValue $value');
   }
 
@@ -238,6 +252,17 @@ extension TextEditingValueX on TextEditingValue {
   }
 }
 
+extension RawKeyEventX on RawKeyEvent {
+  String serialize() {
+    final buffer = StringBuffer();
+    buffer.writeln('{');
+    buffer.writeln('  logicalKey: ${this.logicalKey}');
+    buffer.writeln('  character: ${this.character}');
+    buffer.write('}');
+    return buffer.toString();
+  }
+}
+
 class NumberField extends StatelessWidget {
   NumberField({
     required this.name,
@@ -276,5 +301,48 @@ class NumberField extends StatelessWidget {
     return TextEditingController.fromValue(
       TextEditingValue(text: initValue.toString()),
     );
+  }
+}
+
+class FocusDetect extends StatelessWidget {
+  FocusDetect({
+    required this.onKeyPress,
+  });
+
+  final void Function(RawKeyEvent) onKeyPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      onKey: _handleKeyPress,
+      child: Builder(
+        builder: (BuildContext context) {
+          final FocusNode focusNode = Focus.of(context);
+          final bool hasFocus = focusNode.hasFocus;
+          return GestureDetector(
+            onTap: () {
+              if (hasFocus) {
+                focusNode.unfocus();
+              } else {
+                focusNode.requestFocus();
+              }
+            },
+            child: Container(
+              width: 200,
+              height: 100,
+              alignment: Alignment.center,
+              color: hasFocus ? Colors.red : Colors.grey,
+              child: Text(hasFocus ? "hasFocus" : '!hasFocus'),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  KeyEventResult _handleKeyPress(FocusNode node, RawKeyEvent event) {
+    onKeyPress(event);
+    print('_handleKeyPress $event');
+    return KeyEventResult.ignored;
   }
 }
