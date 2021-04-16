@@ -59,6 +59,39 @@ class AppState extends State<App> {
                 child: Text('close'),
                 onPressed: _inputConnection == null ? null : () => _close(),
               ),
+              SizedBox(height: 15),
+              NumberField(
+                name: 'editableWidth',
+                initValue: editableWidth,
+                onValue: (value) {
+                  editableWidth = value;
+                  _updateEditableSizeAndTransform();
+                },
+              ),
+              NumberField(
+                name: 'editableHeight',
+                initValue: editableHeight,
+                onValue: (value) {
+                  editableHeight = value;
+                  _updateEditableSizeAndTransform();
+                },
+              ),
+              NumberField(
+                name: 'editableOffsetX',
+                initValue: editableOffsetX,
+                onValue: (value) {
+                  editableOffsetX = value;
+                  _updateEditableSizeAndTransform();
+                },
+              ),
+              NumberField(
+                name: 'editableOffsetY',
+                initValue: editableOffsetY,
+                onValue: (value) {
+                  editableOffsetY = value;
+                  _updateEditableSizeAndTransform();
+                },
+              ),
             ],
           ),
         ),
@@ -69,6 +102,11 @@ class AppState extends State<App> {
   late final TestTextInputClient _inputClient = TestTextInputClient(this);
 
   TextInputConnection? _inputConnection;
+
+  var editableWidth = 10.0;
+  var editableHeight = 10.0;
+  var editableOffsetX = 10.0;
+  var editableOffsetY = 10.0;
 
   TextInputConfiguration get _textInputConfiguration {
     return TextInputConfiguration(
@@ -110,6 +148,15 @@ class AppState extends State<App> {
   void onClose() {
     setState(() {
       _textEditingValue = null;
+    });
+  }
+
+  void _updateEditableSizeAndTransform() {
+    setState(() {
+      _inputConnection?.setEditableSizeAndTransform(
+        Size(editableWidth, editableHeight),
+        Matrix4.translationValues(editableOffsetX, editableOffsetY, 0.0),
+      );
     });
   }
 }
@@ -175,5 +222,43 @@ extension TextEditingValueX on TextEditingValue {
     buffer.writeln('  composing: ${this.composing}');
     buffer.write('}');
     return buffer.toString();
+  }
+}
+
+class NumberField extends StatelessWidget {
+  NumberField({
+    required this.name,
+    required this.onValue,
+    required this.initValue,
+  });
+
+  final String name;
+  final double initValue;
+  final void Function(double) onValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(
+        maxWidth: 270,
+      ),
+      child: TextField(
+        controller: _controller,
+        keyboardType: TextInputType.number,
+        decoration: InputDecoration(labelText: name),
+        onChanged: (content) {
+          final value = double.tryParse(content);
+          if (value != null) {
+            onValue(value);
+          }
+        },
+      ),
+    );
+  }
+
+  TextEditingController get _controller {
+    return TextEditingController.fromValue(
+      TextEditingValue(text: initValue.toString()),
+    );
   }
 }
