@@ -28,6 +28,8 @@ class App extends StatefulWidget {
 }
 
 class AppState extends State<App> {
+  final _controller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,6 +108,12 @@ class AppState extends State<App> {
                   _updateEditableSizeAndTransform();
                 },
               ),
+              TextField(
+                controller: _controller,
+                onChanged: (value) {
+                  print(_controller.value);
+                },
+              ),
               SizedBox(height: 15),
               Text('lastKeyEvent ${lastKeyEvent?.serialize()}'),
               SizedBox(height: 15),
@@ -167,6 +175,9 @@ class AppState extends State<App> {
     setState(() {
       _textEditingValue = textEditingValue;
     });
+    // if (textEditingValue.text.isNotEmpty) {
+    //   _inputConnection?.setEditingState(TextEditingValue.empty);
+    // }
   }
 
   void onClose() {
